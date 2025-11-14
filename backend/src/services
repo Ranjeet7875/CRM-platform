@@ -1,0 +1,63 @@
+const nodemailer = require('nodemailer');
+
+const transporter = nodemailer.createTransporter({
+  host: process.env.SMTP_HOST,
+  port: process.env.SMTP_PORT,
+  auth: {
+    user: process.env.SMTP_USER,
+    pass: process.env.SMTP_PASS
+  }
+});
+
+const sendEmail = async (options) => {
+  try {
+    const mailOptions = {
+      from: `CRM Platform <${process.env.SMTP_USER}>`,
+      to: options.to,
+      subject: options.subject,
+      html: options.html
+    };
+
+    await transporter.sendMail(mailOptions);
+    console.log('Email sent successfully');
+  } catch (error) {
+    console.error('Email sending failed:', error);
+  }
+};
+
+// Email templates
+const leadAssignedEmail = (lead, assignee) => {
+  return {
+    to: assignee.email,
+    subject: 'New Lead Assigned',
+    html: `
+      <h2>New Lead Assigned to You</h2>
+      <p>You have been assigned a new lead:</p>
+      <ul>
+        <li><strong>Company:</strong> ${lead.companyName}</li>
+        <li><strong>Contact:</strong> ${lead.contactPerson}</li>
+        <li><strong>Email:</strong> ${lead.email}</li>
+        <li><strong>Priority:</strong> ${lead.priority}</li>
+      </ul>
+      <p>Please follow up at your earliest convenience.</p>
+    `
+  };
+};
+
+const statusUpdateEmail = (lead, oldStatus, newStatus) => {
+  return {
+    to: lead.owner.email,
+    subject: `Lead Status Updated: ${lead.companyName}`,
+    html: `
+      <h2>Lead Status Updated</h2>
+      <p>The status of your lead has been updated:</p>
+      <ul>
+        <li><strong>Company:</strong> ${lead.companyName}</li>
+        <li><strong>Old Status:</strong> ${oldStatus}</li>
+        <li><strong>New Status:</strong> ${newStatus}</li>
+      </ul>
+    `
+  };
+};
+
+module.exports = { sendEmail, leadAssignedEmail, statusUpdateEmail };
